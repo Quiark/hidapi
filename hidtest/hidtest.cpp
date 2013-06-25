@@ -46,7 +46,7 @@ int main(int argc, char* argv[])
 	if (hid_init())
 		return -1;
 
-	devs = hid_enumerate(0x0, 0x0);
+	devs = hid_enumerate(0x0, 0x0, 1);
 	cur_dev = devs;	
 	while (cur_dev) {
 		printf("Device Found\n  type: %04hx %04hx\n  path: %s\n  serial_number: %ls", cur_dev->vendor_id, cur_dev->product_id, cur_dev->path, cur_dev->serial_number);

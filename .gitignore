@@ -23,3 +23,9 @@ config.log
 config.status
 stamp-h1
 libtool
+
+ar-lib
+
+config.h.in~
+
+*.swp

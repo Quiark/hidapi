@@ -58,8 +58,7 @@ extern "C" {
 
 #include <stdio.h>
 #include <stdlib.h>
-
-
+#include <windows.h>
 #include "hidapi.h"
 
 #ifdef _MSC_VER
@@ -259,8 +258,9 @@ int HID_API_EXPORT hid_exit(void)
 	return 0;
 }
 
-struct hid_device_info HID_API_EXPORT * HID_API_CALL hid_enumerate(unsigned short vendor_id, unsigned short product_id)
+struct hid_device_info HID_API_EXPORT * HID_API_CALL hid_enumerate(unsigned short vendor_id, unsigned short product_id, unsigned short signal)
 {
+	
 	BOOL res;
 	struct hid_device_info *root = NULL; /* return object */
 	struct hid_device_info *cur_dev = NULL;
@@ -286,7 +286,6 @@ struct hid_device_info HID_API_EXPORT * HID_API_CALL hid_enumerate(unsigned shor
 	device_info_set = SetupDiGetClassDevsA(&InterfaceClassGuid, NULL, NULL, DIGCF_PRESENT | DIGCF_DEVICEINTERFACE);
 	
 	/* Iterate over each device in the HID class, looking for the right one. */
-	
 	for (;;) {
 		HANDLE write_handle = INVALID_HANDLE_VALUE;
 		DWORD required_size = 0;
@@ -425,26 +424,28 @@ struct hid_device_info HID_API_EXPORT * HID_API_CALL hid_enumerate(unsigned shor
 			}
 			else
 				cur_dev->path = NULL;
+			if(signal)
+			{
+				/* Serial Number */
+				res = HidD_GetSerialNumberString(write_handle, wstr, sizeof(wstr));
+				wstr[WSTR_LEN-1] = 0x0000;
+				if (res) {
+					cur_dev->serial_number = _wcsdup(wstr);
+				}
+				/* Manufacturer String */
+			
+				res = HidD_GetManufacturerString(write_handle, wstr, sizeof(wstr));
+				wstr[WSTR_LEN-1] = 0x0000;
+				if (res) {
+					cur_dev->manufacturer_string = _wcsdup(wstr);
+				}
 
-			/* Serial Number */
-			res = HidD_GetSerialNumberString(write_handle, wstr, sizeof(wstr));
-			wstr[WSTR_LEN-1] = 0x0000;
-			if (res) {
-				cur_dev->serial_number = _wcsdup(wstr);
-			}
-
-			/* Manufacturer String */
-			res = HidD_GetManufacturerString(write_handle, wstr, sizeof(wstr));
-			wstr[WSTR_LEN-1] = 0x0000;
-			if (res) {
-				cur_dev->manufacturer_string = _wcsdup(wstr);
-			}
-
-			/* Product String */
-			res = HidD_GetProductString(write_handle, wstr, sizeof(wstr));
-			wstr[WSTR_LEN-1] = 0x0000;
-			if (res) {
+				/* Product String */
+				res = HidD_GetProductString(write_handle, wstr, sizeof(wstr));
+				wstr[WSTR_LEN-1] = 0x0000;
+				if (res) {
 				cur_dev->product_string = _wcsdup(wstr);
+				}
 			}
 
 			/* VID/PID */
@@ -514,12 +515,14 @@ HID_API_EXPORT hid_device * HID_API_CALL hid_open(unsigned short vendor_id, unsi
 	const char *path_to_open = NULL;
 	hid_device *handle = NULL;
 	
-	devs = hid_enumerate(vendor_id, product_id);
+	devs = hid_enumerate(vendor_id, product_id, 0);
 	cur_dev = devs;
+
 	while (cur_dev) {
 		if (cur_dev->vendor_id == vendor_id &&
 		    cur_dev->product_id == product_id) {
 			if (serial_number) {
+			
 				if (wcscmp(serial_number, cur_dev->serial_number) == 0) {
 					path_to_open = cur_dev->path;
 					break;
@@ -606,7 +609,7 @@ int HID_API_EXPORT HID_API_CALL hid_write(hid_device *dev, const unsigned char *
 	   expects the number of bytes which are in the _longest_ report (plus
 	   one for the report number) bytes even if the data is a report
 	   which is shorter than that. Windows gives us this value in
-	   caps.OutputReportByteLength. If a user passes in fewer bytes than this,
+	   caps.OutputReportByteLength. If a user passes in fewer bytes  than this,
 	   create a temporary buffer which is the proper size. */
 	if (length >= dev->output_report_length) {
 		/* The user passed the right number of bytes. Use the buffer as-is. */
@@ -619,6 +622,7 @@ int HID_API_EXPORT HID_API_CALL hid_write(hid_device *dev, const unsigned char *
 		memset(buf + length, 0, dev->output_report_length - length);
 		length = dev->output_report_length;
 	}
+
 
 	res = WriteFile(dev->device_handle, buf, length, NULL, &ol);
 	
