@@ -258,7 +258,7 @@ int HID_API_EXPORT hid_exit(void)
 	return 0;
 }
 
-struct hid_device_info HID_API_EXPORT * HID_API_CALL hid_enumerate(unsigned short vendor_id, unsigned short product_id, unsigned short get_info)
+struct hid_device_info HID_API_EXPORT * HID_API_CALL hid_enumerate(unsigned short vendor_id, unsigned short product_id, int get_info)
 {
 	
 	BOOL res;
