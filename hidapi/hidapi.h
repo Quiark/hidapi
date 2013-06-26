@@ -129,7 +129,7 @@ extern "C" {
 		    	attached to the system, or NULL in the case of failure. Free
 		    	this linked list by calling hid_free_enumeration().
 		*/
-		struct hid_device_info HID_API_EXPORT * HID_API_CALL hid_enumerate(unsigned short vendor_id, unsigned short product_id, int signal);
+		struct hid_device_info HID_API_EXPORT * HID_API_CALL hid_enumerate(unsigned short vendor_id, unsigned short product_id, int get_info);
 
 		/** @brief Free an enumeration Linked List
 

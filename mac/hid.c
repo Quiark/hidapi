@@ -405,7 +405,7 @@ static void process_pending_events(void) {
 	} while(res != kCFRunLoopRunFinished && res != kCFRunLoopRunTimedOut);
 }
 
-struct hid_device_info  HID_API_EXPORT *hid_enumerate(unsigned short vendor_id, unsigned short product_id, int signal)
+struct hid_device_info  HID_API_EXPORT *hid_enumerate(unsigned short vendor_id, unsigned short product_id, int get_info)
 {
 	struct hid_device_info *root = NULL; /* return object */
 	struct hid_device_info *cur_dev = NULL;
@@ -467,7 +467,7 @@ struct hid_device_info  HID_API_EXPORT *hid_enumerate(unsigned short vendor_id, 
 			cur_dev->next = NULL;
 			len = make_path(dev, cbuf, sizeof(cbuf));
 			cur_dev->path = strdup(cbuf);
-			if(signal){
+			if (get_info) {
 				/* Serial Number */
 				get_serial_number(dev, buf, BUF_LEN);
 				cur_dev->serial_number = dup_wcs(buf);
@@ -477,7 +477,11 @@ struct hid_device_info  HID_API_EXPORT *hid_enumerate(unsigned short vendor_id, 
 				cur_dev->manufacturer_string = dup_wcs(buf);
 				get_product_string(dev, buf, BUF_LEN);
 				cur_dev->product_string = dup_wcs(buf);
-			}
+			} else {
+				cur_dev->serial_number = dup_wcs(L"<unknown>");
+				cur_dev->manufacturer_string = NULL;
+				cur_dev->product_string = NULL;
+            }
 			/* VID/PID */
 			cur_dev->vendor_id = dev_vid;
 			cur_dev->product_id = dev_pid;

@@ -258,7 +258,7 @@ int HID_API_EXPORT hid_exit(void)
 	return 0;
 }
 
-struct hid_device_info HID_API_EXPORT * HID_API_CALL hid_enumerate(unsigned short vendor_id, unsigned short product_id, unsigned short signal)
+struct hid_device_info HID_API_EXPORT * HID_API_CALL hid_enumerate(unsigned short vendor_id, unsigned short product_id, unsigned short get_info)
 {
 	
 	BOOL res;
@@ -424,7 +424,7 @@ struct hid_device_info HID_API_EXPORT * HID_API_CALL hid_enumerate(unsigned shor
 			}
 			else
 				cur_dev->path = NULL;
-			if(signal)
+			if (get_info)
 			{
 				/* Serial Number */
 				res = HidD_GetSerialNumberString(write_handle, wstr, sizeof(wstr));
@@ -446,6 +446,10 @@ struct hid_device_info HID_API_EXPORT * HID_API_CALL hid_enumerate(unsigned shor
 				if (res) {
 				cur_dev->product_string = _wcsdup(wstr);
 				}
+			} else {
+				cur_dev->serial_number = _wcsdup(L"<unknown>");
+				cur_dev->manufacturer_string = NULL;
+				cur_dev->product_string = NULL;
 			}
 
 			/* VID/PID */
